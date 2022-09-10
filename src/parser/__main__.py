@@ -14,9 +14,7 @@ PHONES_PATH = "phones/telefony-i-smartfony"
 
 
 class Parser:
-    def __init__(
-        self, schema: str = SCHEMA, host: str = HOST, path: str = PHONES_PATH
-    ):
+    def __init__(self, schema: str = SCHEMA, host: str = HOST, path: str = PHONES_PATH):
         self.schema = schema
         self.host = host
         self.path = path
@@ -54,11 +52,11 @@ class Parser:
 
 @dataclass
 class Product:
-    name: str
+    title: str
     price: float  # would add currency in production version
     seller: str
     ram: int
-    rom: int
+    memory: int
 
     rom_pattern = re.compile(", Встроенная память: (\d+)(\D+),")
     ram_pattern = re.compile(", Оперативная память: (\d+)(\D+),")
@@ -82,31 +80,31 @@ class Product:
 
         soup = BeautifulSoup(response.text, features="html.parser")
 
-        name = soup.find("h1", {"itemprop": "name"}).text
+        title = soup.find("h1", {"itemprop": "name"}).text
         seller = soup.find("div", {"class": "card-body"}).find("a").text.strip()
 
         price = soup.find("meta", {"itemprop": "price"}).get("content")
-        price = float(price)
+        price = int(price.split(".")[0])
 
         ram_tuple = Product.ram_pattern.findall(
             soup.find("div", {"class": "excerpt"}).text.strip()
         )
 
         if ram_tuple is not None and len(ram_tuple) > 0:
-            ram = int(ram_tuple[0][0])
+            ram = "".join(ram_tuple[0])
         else:
             ram = None
 
-        rom_tuple = Product.rom_pattern.findall(
+        memory_tuple = Product.rom_pattern.findall(
             soup.find("div", {"class": "excerpt"}).text.strip()
         )
 
-        if rom_tuple is not None and len(rom_tuple) > 0:
-            rom = int(rom_tuple[0][0])
+        if memory_tuple is not None and len(memory_tuple) > 0:
+            memory = " ".join(memory_tuple[0])
         else:
-            rom = None
+            memory = None
 
-        return Product(name=name, price=price, seller=seller, ram=ram, rom=rom)
+        return Product(title=title, price=price, seller=seller, ram=ram, memory=memory)
 
 
 if __name__ == "__main__":
@@ -129,8 +127,8 @@ if __name__ == "__main__":
             products.append(
                 Product.from_link(link).__dict__
             )  # due to bug occured at https://alfa.kz/phones/telefony-i-smartfony/xiaomi/redmi_note_11_pro_8_128gb/7643584
-        except Exception:
-            print(f"Could not parse {link}, skipped")
+        except Exception as e:
+            print(f"Could not parse {link}, skipped. Error: {e}")
 
     output_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),

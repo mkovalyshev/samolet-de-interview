@@ -9,13 +9,13 @@ from bs4 import BeautifulSoup
 
 SCHEMA = "https"
 HOST = "alfa.kz"
-SMARTPHONES_PATH = "phones/telefony-i-smartfony/2153-smartfon"
+PHONES_PATH = "phones/telefony-i-smartfony"
 # for this task it can be hardcoded, for production version it should be an element of category tree
 
 
 class Parser:
     def __init__(
-        self, schema: str = SCHEMA, host: str = HOST, path: str = SMARTPHONES_PATH
+        self, schema: str = SCHEMA, host: str = HOST, path: str = PHONES_PATH
     ):
         self.schema = schema
         self.host = host
@@ -31,7 +31,12 @@ class Parser:
         )
 
         if response.status_code != 200:
-            raise Exception("request error on Parser.get_products_from_page()")
+            raise Exception(
+                f"""
+            request error on Parser.get_products_from_page();
+            status_code = {response.status_code};
+            """
+            )
 
         soup = BeautifulSoup(
             response.text, features="html.parser"
@@ -68,7 +73,12 @@ class Product:
         response = requests.get(link)
 
         if response.status_code != 200:
-            raise Exception("request error on Product.from_link()")
+            raise Exception(
+                f"""
+            request error on Product.from_link();
+            status_code = {response.status_code};
+            """
+            )
 
         soup = BeautifulSoup(response.text, features="html.parser")
 
@@ -112,7 +122,15 @@ if __name__ == "__main__":
     for i in range(args.n):
         links += parser.get_products_from_page(i + 1)
 
-    products = [Product.from_link(link).__dict__ for link in links]
+    products = []
+
+    for link in links:
+        try:
+            products.append(
+                Product.from_link(link).__dict__
+            )  # due to bug occured at https://alfa.kz/phones/telefony-i-smartfony/xiaomi/redmi_note_11_pro_8_128gb/7643584
+        except Exception:
+            print(f"Could not parse {link}, skipped")
 
     output_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),

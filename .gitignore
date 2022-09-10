@@ -132,3 +132,4 @@ dmypy.json
 src/parser/data/*
 test.ipynb
 .DS_Store
+src/kafka/data/*

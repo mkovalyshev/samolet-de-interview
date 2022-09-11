@@ -27,3 +27,11 @@
 - stored at `src/kafka/consumer.py`
 - gets data from Kafka `blacklist` topic (no offset, gets all messages)
 - writes data to PostgreSQL `blacklist` table
+
+## 5. REST API
+- stored at `src/api`
+- built with `docker-compose up`
+- PostgreSQL connection is set in `docker-compose.yml` environment variables
+- result is logged into `logs` table at PostgreSQL
+- gets JSON with `ctn`, `iin`, `smartphoneID`, `income` and `creationDate` params
+- returns JSON with `result` and optional `reason` params

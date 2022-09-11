@@ -1,0 +1,1 @@
+create index if not exists blacklist_id on blacklist(id);

@@ -1,11 +1,7 @@
-from kafka import KafkaConsumer, TopicPartition
-import json
-import sys
 import os
+import json
 import psycopg2
-
-sys.path.append(os.path.abspath(os.path.dirname(os.path.abspath(__file__))))
-
+from kafka import KafkaConsumer
 from producer import KAFKA_HOST, KAFKA_PORT, KAFKA_TOPIC
 
 POSTGRES_USER = "samolet"
@@ -14,19 +10,28 @@ POSTGRES_HOST = "localhost"
 POSTGRES_PORT = 5432
 POSTGRES_DATABASE = "postgres"
 
-BLACKLIST_DDL = """
-create table if not exists public.blacklist (
-    id int,
-    phone varchar(10),
-    datetime timestamp
-);
-"""
-
-BLACKLIST_INDEX = """
-create index if not exists blacklist_id on blacklist(id);
-"""
-
 KAFKA_COMMIT_THRESHOLD = 5
+
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "SQL/blacklist_DDL.sql"),
+    "r",
+) as f:
+    BLACKLIST_DDL = f.read()
+
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "SQL/blacklist_index.sql"),
+    "r",
+) as f:
+    BLACKLIST_INDEX = f.read()
+
+with open(
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "SQL/blacklist_insert.sql"
+    ),
+    "r",
+) as f:
+    BLACKLIST_INSERT = f.read()
+
 
 if __name__ == "__main__":
 
@@ -57,17 +62,11 @@ if __name__ == "__main__":
 
         for msg in consumer:
             cursor.execute(
-                f"""
-            insert into blacklist (
-                id,
-                phone,
-                datetime
-            ) values (
-                {msg.value.get("id")},
-                {msg.value.get("phone")},
-                '{msg.value.get("datetime")}'
-            )
-            """
+                BLACKLIST_INSERT.format(
+                    id=msg.value.get("id"),
+                    phone=msg.value.get("phone"),
+                    datetime=msg.value.get("datetime"),
+                )
             )
 
             connection.commit()

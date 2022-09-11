@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     with open(CSV_OUTPUT_PATH, "w", newline="\n") as f:
 
-        title = [field for field in User.__dataclass_fields__]  # hardcode, not nice
+        title = [field for field in User.__dataclass_fields__]
 
         writer = csv.DictWriter(
             f, title, delimiter=",", quotechar='"', quoting=csv.QUOTE_NONNUMERIC

@@ -1,6 +1,6 @@
 # Interview: DE at Samolet
 
-All environment variables (connection mostly) can be set by running `env.sh` script.
+All environment variables (connections mostly) can be set by running `env.sh` script.
 
 ## 1. [Alfa.kz](alfa.kz) parser  
 - stored at `src/parser`

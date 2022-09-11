@@ -1,0 +1,14 @@
+version: '2'
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/api
+    environment:
+      - PG_HOST=docker.for.mac.host.internal
+      - PG_PORT=5432
+      - PG_USER=samolet
+      - PG_PASS=1111
+      - PG_DATABASE=postgres

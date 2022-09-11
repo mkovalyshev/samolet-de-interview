@@ -30,7 +30,7 @@ All environment variables (connection mostly) can be set by running `env.sh` scr
 - writes data to PostgreSQL `blacklist` table
 
 ## 5. REST API
-- stored at `src/api`
+- stored at `src/api`, has its own venv and requirements.txt
 - built and run with `docker-compose up`
 - PostgreSQL connection is set in `docker-compose.yml` environment variables
 - each result is logged into `logs` table at PostgreSQL

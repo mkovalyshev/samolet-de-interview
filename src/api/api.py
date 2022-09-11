@@ -1,27 +1,30 @@
-from dataclasses import dataclass
-import datetime
-from enum import Enum
-import json
-from typing import Optional
-from unittest import result
-from urllib import response
-from flask import Flask, request, jsonify
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import os
+import psycopg2
+from flask import Flask, request, jsonify
+from psycopg2.extras import RealDictCursor
+from models import ResponseResolution, RejectReason, ResultResponse, ResultRequest
+from functions import log
 
 MONTHLY_PAYMENT_THRESHOLD = 0.2
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-LOG_DDL = """
-create table if not exists logs (
-    id serial primary key,
-    url varchar(255),
-    ctn varchar(10),
-    result varchar(64),
-    log_timestamp timestamp
-);
-"""
+
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "SQL/log_DDL.sql"),
+    "r",
+) as f:
+    LOG_DDL = f.read()
+
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "SQL/blacklist.sql"),
+    "r",
+) as f:
+    BLACKLIST = f.read()
+
+with open(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "SQL/price.sql"),
+    "r",
+) as f:
+    PRICE = f.read()
 
 postgres_credentials = {
     "host": os.getenv("PG_HOST"),
@@ -34,92 +37,11 @@ postgres_credentials = {
 app = Flask(__name__)
 
 
-class ResponseResolution(Enum):
-    approve = "Одобрение"
-    reject = "Отказ"
-
-
-class RejectReason(Enum):
-    blacklist = "Клиент находится в черном списке"
-    income = "Клиент не имеет достаточный уровень дохода"
-
-
-@dataclass
-class ResultRequest:
-    ctn: str
-    iin: str
-    smartphoneID: int
-    income: int
-    creationDate: str
-
-
-@dataclass
-class ResultResponse:
-    result: ResponseResolution
-    reason: Optional[RejectReason]
-
-    def json(self):
-        return {key: value for key, value in self.__dict__.items() if value is not None}
-
-
-@dataclass
-class Log:
-    url: str
-    ctn: str
-    result: str
-    log_timestamp: str
-
-
-def log(func):
-    global postgres_credentials
-
-    def wrapper(*args, **kwargs):
-        response = func(*args, **kwargs)
-
-        log = Log(
-            url=request.url,
-            ctn=request.get_json().get("ctn"),
-            result=json.loads(response.get_data().decode("utf-8")).get("result"),
-            log_timestamp=datetime.datetime.now().strftime(DATETIME_FORMAT),
-        )
-
-        with psycopg2.connect(**postgres_credentials) as connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                f"""
-                insert into logs (
-                    url,
-                    ctn,
-                    result,
-                    log_timestamp
-                ) values (
-                    '{log.url}',
-                    '{log.ctn}',
-                    '{log.result}',
-                    '{log.log_timestamp}'
-                )
-                """
-            )
-
-            connection.commit()
-
-        print(log.__dict__)
-
-        return response
-
-    return wrapper
-
-
-@app.route("/")
-def ping():
-    return "This is home, better go to endpoints"
-
-
 @app.route("/get_result", methods=["POST"])
 @log
 def get_result():
     """
-    docstring
+    returns payment resolution
     """
 
     global postgres_credentials
@@ -128,14 +50,7 @@ def get_result():
 
     with psycopg2.connect(**postgres_credentials) as connection:
         cursor = connection.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(
-            f"""
-            select count(*) as blacklist
-            from public.blacklist
-            where True
-                and phone = '{result_request.ctn}'
-            """
-        )
+        cursor.execute(BLACKLIST.format(result_request.ctn))
 
         blacklist_cnt = cursor.fetchone().get("blacklist") > 0
 
@@ -146,14 +61,7 @@ def get_result():
 
             return jsonify(response.json())
 
-        cursor.execute(
-            f"""
-            select smartphone_price
-            from public.smartphones
-            where True
-                and smartphone_id = {result_request.smartphoneID}
-            """
-        )
+        cursor.execute(PRICE.format(result_request.smartphoneID))
 
         smartphone_price = cursor.fetchone().get("smartphone_price")
 

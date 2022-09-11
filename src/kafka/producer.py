@@ -5,8 +5,8 @@ import argparse
 from kafka import KafkaProducer
 from parser import User, DATETIME_FORMAT
 
-KAFKA_HOST = "localhost"
-KAFKA_PORT = 9092
+KAFKA_HOST = os.getenv("KAFKA_HOST")
+KAFKA_PORT = os.getenv("KAFKA_PORT")
 KAFKA_TOPIC = "blacklist"
 
 

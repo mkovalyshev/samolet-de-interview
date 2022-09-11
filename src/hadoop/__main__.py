@@ -4,20 +4,20 @@ import argparse
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 
-HADOOP_HOST = "localhost"
-HADOOP_PORT = "9000"
+HADOOP_HOST = os.getenv("HADOOP_HOST")
+HADOOP_PORT = os.getenv("HADOOP_PORT")
 
-HADOOP_PATH = "user/kovalyshev/samolet"
+HADOOP_PATH = os.getenv("HADOOP_PATH")
 HADOOP_TABLE = "smartphones.parquet"
 
 RELATIVE_FILEPATH = "parser/data"
 
-POSTGRES_USER = "samolet"
-POSTGRES_PASSWORD = "1111"
-POSTGRES_HOST = "localhost"
-POSTGRES_PORT = 5432
-POSTGRES_DATABASE = "postgres"
-POSTGRES_DRIVER = "/Users/kovalyshev/postgresql-42.5.0.jar"
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE")
+POSTGRES_DRIVER = os.getenv("POSTGRES_DRIVER")
 
 POSTGRES_TABLE = "smartphones"
 

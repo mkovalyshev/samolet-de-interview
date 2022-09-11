@@ -1,27 +1,28 @@
 # Interview: DE at Samolet
 
+All environment variables (connection mostly) can be set by running `env.sh` script.
+
 ## 1. [Alfa.kz](alfa.kz) parser  
 - stored at `src/parser`
-- called with `python src/parser -n #`, where # = number of pages to parse  
-- category is hardcoded to phones and smartphones (`phones/telefony-i-smartfony`)  
+- requires CLI argument `-n` defining number of pages to parse
+- writes products in `phones/telefony-i-smartfony` category to `src/parser/data/output_*unixtime*.csv` file, skips product with no RAM or memory data
 
 ## 2. Hadoop ETL operation
 - stored at `src/hadoop`
-- extracts file from `FILEPATH`
-- transforms data (title → brand + model, avg price over model)
-- loads to HDFS as `smartphones.parquet` and to PostgreSQL `smartphones` table
+- requires CLI argument `-f` defining filename of input from `src/parser/data` folder
+- transforms data (title → brand + model, average price over model)
+- loads data to HDFS as `smartphones.parquet` and to PostgreSQL `smartphones` table
 
 ## 3 Binary data parser
 - stored at `src/kafka/parser.py`
 - extracts data from `data/data.bin`
-- implemented as generator (yields instances of User object)
-- loads data to `data/users_*timestamp*.csv`
+- loads data to `data/users_*unixtime*.csv`
 
 ## 4. Kafka scripts
 
 ### 4.1 Kafka producer
 - stored at `src/kafka/producer.py`
-- extracts data from `data/users_*timestamp*.csv`
+- requires CLI argument `-f` defining filename of input from `src/kafka/data` folder
 - sends messages to Kafka `blacklist` topic, message key is `id`, value is a UTF-8 encoded JSON string
 ### 4.2 Kafka consumer
 - stored at `src/kafka/consumer.py`
@@ -30,8 +31,8 @@
 
 ## 5. REST API
 - stored at `src/api`
-- built with `docker-compose up`
+- built and run with `docker-compose up`
 - PostgreSQL connection is set in `docker-compose.yml` environment variables
-- result is logged into `logs` table at PostgreSQL
+- each result is logged into `logs` table at PostgreSQL
 - gets JSON with `ctn`, `iin`, `smartphoneID`, `income` and `creationDate` params
 - returns JSON with `result` and optional `reason` params

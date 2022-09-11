@@ -2,7 +2,7 @@
 
 All environment variables (connections mostly) can be set by running `env.sh` script.
 
-## 1. [Alfa.kz](alfa.kz) parser  
+## 1. [Alfa.kz](https://alfa.kz) parser  
 - stored at `src/parser`
 - requires CLI argument `-n` defining number of pages to parse
 - writes products in `phones/telefony-i-smartfony` category to `src/parser/data/output_*unixtime*.csv` file, skips product with no RAM or memory data
